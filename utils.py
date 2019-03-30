@@ -1,4 +1,4 @@
-import pandas as pandas
+import pandas as pd
 from pandas.plotting import scatter_matrix
 import numpy as np
 import matplotlib
@@ -12,7 +12,7 @@ def handle_missing(df,
                    col_name,
                    fill_type='mode', #mode, median, mean, value, or fill
                    value=None, #what to fill with if fill_type = 'value'
-                   missing_name=None, #Value to replace with np.nan
+                   missing_name=None, #Value to replace with np.nan if not null
                    indicator=True):
     '''
     Function for handling missing data in a column
@@ -106,15 +106,15 @@ def correlation_graph(df,y,filename):
     numeric_list = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
     df = df.select_dtypes(include=numeric_list)
 
-    y_name = y.name
+    #y_name = y.name
 
-    df = pd.concat([df,y],axis=1)  
+    #df = pd.concat([df,y],axis=1)  
 
 
     for col in df.columns:
         print(col)
 
-        df.plot(kind='scatter',x=col,y=y_name,alpha=0.1,figsize=(15,10))
+        df.plot(kind='scatter',x=col,y=y,alpha=0.1,figsize=(15,10))
         matplotlib.pyplot.savefig(filename+'/'+str(col))
         plt.close()
 
@@ -172,4 +172,41 @@ def standardize_scale(df,cols):
         df[i] = (df[i] - mean) / vari
 
     return df
+
+
+def train_test_split(df,y_col):
+    '''
+    Function for splitting the train data
+    into three parts. 70/20/10
+    The 10% to only be used for final verify.
+    Also separates out y variable
+    '''
+
+    np.random.seed(20)
+    random_indicies = np.random.permutation(len(df))
+
+    test_ver_len = int(len(df) * 0.3)
+    verify_len = int(len(df) * 0.1)
+
+    train_indicies = random_indicies[test_ver_len:]
+    test_indicies = random_indicies[verify_len:test_ver_len]
+    verify_indicies = random_indicies[:verify_len]
+
+    df_train = df.iloc[train_indicies].copy()
+    df_test = df.iloc[test_indicies].copy()
+    df_verify = df.iloc[verify_indicies].copy()
+
+    df_train_y = df_train[y_col].copy()
+    df_train = df_train.drop(y_col,axis=1)
+
+    df_test_y = df_test[y_col].copy()
+    df_test = df_test.drop(y_col,axis=1)
+
+    df_verify_y = df_verify[y_col].copy()
+    df_verify = df_verify.drop(y_col,axis=1)
+
+    return df_train, df_test, df_verify, df_train_y, df_test_y, df_verify_y
+
+
+
 
